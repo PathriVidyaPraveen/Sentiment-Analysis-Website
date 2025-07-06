@@ -98,6 +98,7 @@ if st.button("Analyze Sentiment"):
             st.markdown("#### Attention Heatmap:")
 
             # Inject dual theme CSS
+            # 1. Inject CSS once — handles both themes
             st.markdown("""
     <style>
         .attention-word {
@@ -109,7 +110,7 @@ if st.button("Analyze Sentiment"):
             transition: all 0.2s ease-in-out;
         }
 
-        /* Light mode styles */
+        /* Light theme: black text, soft background */
         @media (prefers-color-scheme: light) {
             .attention-word {
                 color: black;
@@ -117,22 +118,23 @@ if st.button("Analyze Sentiment"):
             }
         }
 
-        /* Dark mode styles */
+        /* Dark theme: white glowing text */
         @media (prefers-color-scheme: dark) {
             .attention-word {
-                color: white;
-                text-shadow: 0 0 4px rgba(0,0,0,0.5);
+                color: #fff;
+                text-shadow: 0 0 4px rgba(255,255,255,0.8);
             }
         }
     </style>
 """, unsafe_allow_html=True)
 
+
 # Then generate the HTML heatmap
             html_blocks = "".join([
     f"""
     <div class='attention-word' style='
-        background: radial-gradient(circle, rgba(255,0,0,{weight:.3f}) 0%, rgba(100,0,0,0.2) 100%);
-        box-shadow: 0 0 {6 + int(weight*12)}px rgba(255,0,0,{0.4 + weight/2});
+        background: rgba(255, 50, 50, {0.1 + weight*0.9});
+        box-shadow: 0 0 {6 + int(weight * 14)}px rgba(255, 0, 0, {0.4 + weight * 0.6});
     '>{word}</div>
     """
     for word, weight in zip(tokens, attn_weights)
@@ -147,9 +149,9 @@ if st.button("Analyze Sentiment"):
 
 
             st.markdown(
-            f"<div style='display: flex; flex-wrap: wrap;'>{html_blocks}</div>",
-            unsafe_allow_html=True
-    )
+    f"<div style='display: flex; flex-wrap: wrap; gap: 6px;'>{html_blocks}</div>",
+    unsafe_allow_html=True
+)
 
 
 
