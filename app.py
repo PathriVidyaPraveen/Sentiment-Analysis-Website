@@ -11,7 +11,8 @@ from model.base_models import BidirectionalRNN, AttentionClassifier
 from model.bahdanau import BahdanauAttention
 
 # Constants
-MODEL_URL = "https://drive.google.com/uc?id=1RkVRAfOLD3HCwbaimCuZm2nrNIrBVgV9"  # converted to direct link
+MODEL_URL = "https://drive.google.com/uc?id=1RkVRAfOLD3HCwbaimCuZm2nrNIrBVgV9"
+EMBEDDING_URL = "https://drive.google.com/file/d/113PyjIdTNwuIZbvjEcUcbdNolMzHmIKK"
 
 # Preprocessing
 def preprocess_text(text):
@@ -27,10 +28,14 @@ def encode_text(tokens, vocab):
 
 @st.cache_resource
 def load_resources():
+    embedding_path = "model/embedding_matrix.pt"
+    if not os.path.exists(embedding_path):
+        with st.spinner("Downloading embedding matrix..."):
+            urllib.request.urlretrieve(EMBEDDING_URL, embedding_path)
     with open("model/vocab.pkl", "rb") as f:
         vocab = pickle.load(f)
 
-    embedding_matrix = torch.load("model/embedding_matrix.pt")
+    embedding_matrix = torch.load(embedding_path)
 
     hidden_dim = 128
     output_dim = 2
