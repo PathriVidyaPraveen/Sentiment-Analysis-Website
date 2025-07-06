@@ -128,22 +128,20 @@ if st.button("Analyze Sentiment"):
     </style>
 """, unsafe_allow_html=True)
 
-
-# Then generate the HTML heatmap
+            # Then generate the HTML heatmap
             html_blocks = []
-        for word, weight in zip(tokens, attn_weights):
-        weight_clamped = float(np.clip(weight, 0, 1))  # just in case
-        html_blocks.append(f"""
-            <div class='attention-word' style='
-                background: rgba(255, 50, 50, {round(0.1 + weight_clamped * 0.9, 3)});
-                box-shadow: 0 0 {6 + int(weight_clamped * 14)}px rgba(255, 0, 0, {round(0.4 + weight_clamped * 0.6, 3)});
-            '>{word}</div>
-        """)
+            for word, weight in zip(tokens, attn_weights):
+                weight_clamped = float(np.clip(weight, 0, 1))  # just in case
+                html_blocks.append(f"""
+                    <div class='attention-word' style='
+                        background: rgba(255, 50, 50, {round(0.1 + weight_clamped * 0.9, 3)});
+                        box-shadow: 0 0 {6 + int(weight_clamped * 14)}px rgba(255, 0, 0, {round(0.4 + weight_clamped * 0.6, 3)});
+                    '>{word}</div>
+                """)
 
-        st.markdown("<div style='display: flex; flex-wrap: wrap; gap: 6px;'>", unsafe_allow_html=True)
-        st.markdown("".join(html_blocks), unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-
+            st.markdown("<div style='display: flex; flex-wrap: wrap; gap: 6px;'>", unsafe_allow_html=True)
+            st.markdown("".join(html_blocks), unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
 # Clean footer and hide Streamlit watermark
 st.markdown("""
