@@ -1,0 +1,124 @@
+import streamlit as st
+import torch
+import torch.nn.functional as F
+import pickle
+import numpy as np
+import re
+import os
+import urllib.request
+
+from model.base_models import BidirectionalRNN, AttentionClassifier
+from model.bahdanau import BahdanauAttention
+
+# Constants
+MODEL_URL = "https://drive.google.com/uc?id=1RkVRAfOLD3HCwbaimCuZm2nrNIrBVgV9"  # converted to direct link
+
+# Preprocessing
+def preprocess_text(text):
+    from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
+    text = text.lower()
+    text = re.sub(r"[^a-z0-9' ]", '', text)
+    tokens = text.strip().split()
+    tokens = [t for t in tokens if t not in ENGLISH_STOP_WORDS]
+    return tokens
+
+def encode_text(tokens, vocab):
+    return [vocab.get(token, vocab["<UNK>"]) for token in tokens]
+
+@st.cache_resource
+def load_resources():
+    with open("model/vocab.pkl", "rb") as f:
+        vocab = pickle.load(f)
+
+    embedding_matrix = torch.load("model/embedding_matrix.pt")
+
+    hidden_dim = 128
+    output_dim = 2
+    base_model = BidirectionalRNN(embedding_matrix, hidden_dim, output_dim)
+    attention = BahdanauAttention(
+        encoder_hidden_dim=hidden_dim * 2,
+        decoder_hidden_dim=hidden_dim * 2,
+        attention_dim=64
+    )
+    model = AttentionClassifier(base_model, attention, hidden_dim * 2, output_dim)
+
+    model_path = "model/BidirectionalRNN_Bahdanau.pth"
+    if not os.path.exists(model_path):
+        with st.spinner("Downloading model..."):
+            urllib.request.urlretrieve(MODEL_URL, model_path)
+
+    model.load_state_dict(torch.load(model_path, map_location=torch.device("cpu")))
+    model.eval()
+    return model, vocab
+
+
+# Load model & vocab
+model, vocab = load_resources()
+
+# Streamlit UI
+st.set_page_config(page_title="IMDB Sentiment Classifier", layout="centered")
+
+st.markdown("""
+    <div style='text-align: center;'>
+        <h1 style='color: #FF4B4B;'>🎬 IMDB Sentiment Analysis</h1>
+        <p style='font-size: 18px;'>Built with Bidirectional RNN + Bahdanau Attention by leveraging the techniques of Natural Language Processing</p>
+    </div>
+""", unsafe_allow_html=True)
+
+st.write("")
+st.write("")
+
+user_input = st.text_area("Enter a movie review below:", height=150, placeholder="e.g. The movie was absolutely fantastic with stunning performances...")
+
+if st.button("Analyze Sentiment"):
+    if not user_input.strip():
+        st.warning("Please enter a review to analyze.")
+    else:
+        tokens = preprocess_text(user_input)
+        encoded = encode_text(tokens, vocab)
+        input_tensor = torch.tensor([encoded], dtype=torch.long)
+        lengths = torch.tensor([len(encoded)], dtype=torch.long)
+
+        with torch.no_grad():
+            logits, attn_weights = model(input_tensor, lengths)
+            probs = torch.softmax(logits, dim=1)
+            pred_class = torch.argmax(probs, dim=1).item()
+            confidence = probs[0, pred_class].item()
+
+        
+        sentiment = "Positive" if pred_class == 1 else "Negative"
+        st.markdown(f"### Prediction: **{sentiment}**")
+        st.progress(confidence)
+
+        st.markdown(f"**Model Confidence:** `{confidence:.4f}`")
+
+        
+        with st.expander(" View Attention Weights"):
+            attn_weights = attn_weights[0][:len(tokens)].numpy()
+            st.markdown("#### Attention Heatmap:")
+
+            
+            st.markdown(
+                "<div style='display: flex; flex-wrap: wrap;'>"
+                + "".join([
+                    f"<div style='padding: 4px 8px; margin: 4px; border-radius: 8px; background-color: rgba(255,0,0,{weight:.2f}); color: white;'>{word}</div>"
+                    for word, weight in zip(tokens, attn_weights)
+                ]) +
+                "</div>",
+                unsafe_allow_html=True
+            )
+
+st.markdown("""
+    <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+    </style>
+""", unsafe_allow_html=True)
+
+
+st.markdown("""
+    <hr style='border: 1px solid #ddd; margin-top: 40px;'>
+    <div style='text-align: center; color: gray; font-size: 14px;'>
+        &copy; 2025 &nbsp; | &nbsp; Made with ❤️ by <strong>P. Vidya Praveen</strong> @ <em>Epoch, IIT Hyderabad</em>
+    </div>
+""", unsafe_allow_html=True)
