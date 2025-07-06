@@ -35,7 +35,7 @@ def load_resources():
     with open("model/vocab.pkl", "rb") as f:
         vocab = pickle.load(f)
 
-    embedding_matrix = torch.load(embedding_path)
+    embedding_matrix = torch.load(embedding_path,weights_only=False)
 
     hidden_dim = 128
     output_dim = 2
