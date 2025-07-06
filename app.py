@@ -100,18 +100,20 @@ if st.button("Analyze Sentiment"):
             html_blocks = "".join([
     f"""
     <div style='
-        padding: 4px 8px;
-        margin: 4px;
-        border-radius: 8px;
-        background-color: rgba(255, 0, 0, {weight:.2f});
+        padding: 6px 12px;
+        margin: 6px;
+        border-radius: 10px;
         font-weight: bold;
-        mix-blend-mode: screen;
+        background: radial-gradient(circle, rgba(255,0,0,{weight:.2f}) 0%, rgba(100,0,0,0.2) 100%);
         color: white;
-        text-shadow: 0px 0px 2px rgba(0,0,0,0.3);
+        box-shadow: 0 0 {6 + int(weight*12)}px rgba(255,0,0,{0.5 + weight/2});
+        text-shadow: 0 0 4px rgba(0,0,0,0.5);
+        transition: all 0.2s ease-in-out;
     '>{word}</div>
     """
     for word, weight in zip(tokens, attn_weights)
 ])
+
 
 
 
