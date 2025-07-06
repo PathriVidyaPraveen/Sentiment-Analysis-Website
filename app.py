@@ -1,18 +1,17 @@
 import streamlit as st
 import torch
-import torch.nn.functional as F
 import pickle
 import numpy as np
 import re
 import os
-import urllib.request
+import gdown  
 
 from model.base_models import BidirectionalRNN, AttentionClassifier
 from model.bahdanau import BahdanauAttention
 
-# Constants
-MODEL_URL = "https://drive.google.com/uc?id=1RkVRAfOLD3HCwbaimCuZm2nrNIrBVgV9"
-EMBEDDING_URL = "https://drive.google.com/file/d/113PyjIdTNwuIZbvjEcUcbdNolMzHmIKK"
+# Google Drive File IDs
+EMBEDDING_FILE_ID = "113PyjIdTNwuIZbvjEcUcbdNolMzHmIKK"
+MODEL_FILE_ID = "1RkVRAfOLD3HCwbaimCuZm2nrNIrBVgV9"
 
 # Preprocessing
 def preprocess_text(text):
@@ -28,14 +27,22 @@ def encode_text(tokens, vocab):
 
 @st.cache_resource
 def load_resources():
+    os.makedirs("model", exist_ok=True)
     embedding_path = "model/embedding_matrix.pt"
+    model_path = "model/BidirectionalRNN_Bahdanau.pth"
+
     if not os.path.exists(embedding_path):
-        with st.spinner("Downloading embedding matrix..."):
-            urllib.request.urlretrieve(EMBEDDING_URL, embedding_path)
+        with st.spinner(" Downloading embedding matrix..."):
+            gdown.download(f"https://drive.google.com/uc?id={EMBEDDING_FILE_ID}", embedding_path, quiet=False)
+
+    if not os.path.exists(model_path):
+        with st.spinner(" Downloading model weights..."):
+            gdown.download(f"https://drive.google.com/uc?id={MODEL_FILE_ID}", model_path, quiet=False)
+
     with open("model/vocab.pkl", "rb") as f:
         vocab = pickle.load(f)
 
-    embedding_matrix = torch.load(embedding_path,weights_only=False)
+    embedding_matrix = torch.load(embedding_path)
 
     hidden_dim = 128
     output_dim = 2
@@ -46,16 +53,10 @@ def load_resources():
         attention_dim=64
     )
     model = AttentionClassifier(base_model, attention, hidden_dim * 2, output_dim)
-
-    model_path = "model/BidirectionalRNN_Bahdanau.pth"
-    if not os.path.exists(model_path):
-        with st.spinner("Downloading model..."):
-            urllib.request.urlretrieve(MODEL_URL, model_path)
-
     model.load_state_dict(torch.load(model_path, map_location=torch.device("cpu")))
     model.eval()
-    return model, vocab
 
+    return model, vocab
 
 # Load model & vocab
 model, vocab = load_resources()
@@ -66,12 +67,9 @@ st.set_page_config(page_title="IMDB Sentiment Classifier", layout="centered")
 st.markdown("""
     <div style='text-align: center;'>
         <h1 style='color: #FF4B4B;'>🎬 IMDB Sentiment Analysis</h1>
-        <p style='font-size: 18px;'>Built with Bidirectional RNN + Bahdanau Attention by leveraging the techniques of Natural Language Processing</p>
+        <p style='font-size: 18px;'>Built with Bidirectional RNN + Bahdanau Attention by leveraging Natural Language Processing techniques</p>
     </div>
 """, unsafe_allow_html=True)
-
-st.write("")
-st.write("")
 
 user_input = st.text_area("Enter a movie review below:", height=150, placeholder="e.g. The movie was absolutely fantastic with stunning performances...")
 
@@ -90,19 +88,14 @@ if st.button("Analyze Sentiment"):
             pred_class = torch.argmax(probs, dim=1).item()
             confidence = probs[0, pred_class].item()
 
-        
         sentiment = "Positive" if pred_class == 1 else "Negative"
         st.markdown(f"### Prediction: **{sentiment}**")
         st.progress(confidence)
-
         st.markdown(f"**Model Confidence:** `{confidence:.4f}`")
 
-        
         with st.expander(" View Attention Weights"):
             attn_weights = attn_weights[0][:len(tokens)].numpy()
             st.markdown("#### Attention Heatmap:")
-
-            
             st.markdown(
                 "<div style='display: flex; flex-wrap: wrap;'>"
                 + "".join([
@@ -113,13 +106,12 @@ if st.button("Analyze Sentiment"):
                 unsafe_allow_html=True
             )
 
+# Clean footer and hide Streamlit watermark
 st.markdown("""
     <style>
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
+        #MainMenu, footer {visibility: hidden;}
     </style>
 """, unsafe_allow_html=True)
-
 
 st.markdown("""
     <hr style='border: 1px solid #ddd; margin-top: 40px;'>
