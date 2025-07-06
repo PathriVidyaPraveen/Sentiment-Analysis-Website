@@ -140,9 +140,9 @@ if st.button("Analyze Sentiment"):
             '>{word}</div>
         """)
 
-        st.markdown("<div style='display: flex; flex-wrap: wrap; gap: 6px;'>", unsafe_allow_html=True)
-        st.markdown("".join(html_blocks), unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("<div style='display: flex; flex-wrap: wrap; gap: 6px;'>", unsafe_allow_html=True)
+    st.markdown("".join(html_blocks), unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 # Clean footer and hide Streamlit watermark
