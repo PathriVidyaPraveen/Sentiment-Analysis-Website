@@ -98,9 +98,20 @@ if st.button("Analyze Sentiment"):
             st.markdown("#### Attention Heatmap:")
 
             html_blocks = "".join([
-        f"<div style='padding: 4px 8px; margin: 4px; border-radius: 8px; background-color: rgba(255, 0, 0, {weight:.2f}); color: {'black' if weight < 0.5 else 'white'}; font-weight: bold; box-shadow: 0 0 2px rgba(0,0,0,0.1);'>{word}</div>"
-        for word, weight in zip(tokens, attn_weights)
-    ])
+    f"""
+    <div style='
+        padding: 4px 8px;
+        margin: 4px;
+        border-radius: 8px;
+        background-color: rgba(255, 0, 0, {weight:.2f});
+        font-weight: bold;
+        mix-blend-mode: difference;
+        color: white;
+    '>{word}</div>
+    """
+    for word, weight in zip(tokens, attn_weights)
+])
+
 
             st.markdown(
             f"<div style='display: flex; flex-wrap: wrap;'>{html_blocks}</div>",
