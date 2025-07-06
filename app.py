@@ -105,12 +105,14 @@ if st.button("Analyze Sentiment"):
         border-radius: 8px;
         background-color: rgba(255, 0, 0, {weight:.2f});
         font-weight: bold;
-        mix-blend-mode: difference;
+        mix-blend-mode: screen;
         color: white;
+        text-shadow: 0px 0px 2px rgba(0,0,0,0.3);
     '>{word}</div>
     """
     for word, weight in zip(tokens, attn_weights)
 ])
+
 
 
             st.markdown(
