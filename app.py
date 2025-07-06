@@ -97,22 +97,51 @@ if st.button("Analyze Sentiment"):
             attn_weights = attn_weights[0][:len(tokens)].numpy()
             st.markdown("#### Attention Heatmap:")
 
+            # Inject dual theme CSS
+            st.markdown("""
+    <style>
+        .attention-word {
+            padding: 6px 12px;
+            margin: 6px;
+            border-radius: 10px;
+            font-weight: bold;
+            display: inline-block;
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* Light mode styles */
+        @media (prefers-color-scheme: light) {
+            .attention-word {
+                color: black;
+                text-shadow: none;
+            }
+        }
+
+        /* Dark mode styles */
+        @media (prefers-color-scheme: dark) {
+            .attention-word {
+                color: white;
+                text-shadow: 0 0 4px rgba(0,0,0,0.5);
+            }
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# Then generate the HTML heatmap
             html_blocks = "".join([
     f"""
-    <div style='
-        padding: 6px 12px;
-        margin: 6px;
-        border-radius: 10px;
-        font-weight: bold;
-        background: radial-gradient(circle, rgba(255,0,0,{weight:.2f}) 0%, rgba(100,0,0,0.2) 100%);
-        color: white;
-        box-shadow: 0 0 {6 + int(weight*12)}px rgba(255,0,0,{0.5 + weight/2});
-        text-shadow: 0 0 4px rgba(0,0,0,0.5);
-        transition: all 0.2s ease-in-out;
+    <div class='attention-word' style='
+        background: radial-gradient(circle, rgba(255,0,0,{weight:.3f}) 0%, rgba(100,0,0,0.2) 100%);
+        box-shadow: 0 0 {6 + int(weight*12)}px rgba(255,0,0,{0.4 + weight/2});
     '>{word}</div>
     """
     for word, weight in zip(tokens, attn_weights)
 ])
+
+            st.markdown(
+    f"<div style='display: flex; flex-wrap: wrap;'>{html_blocks}</div>",
+    unsafe_allow_html=True
+)
 
 
 
