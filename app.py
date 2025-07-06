@@ -140,13 +140,7 @@ if st.button("Analyze Sentiment"):
     for word, weight in zip(tokens, attn_weights)
 ])
 
-            st.markdown(
-    f"<div style='display: flex; flex-wrap: wrap;'>{html_blocks}</div>",
-    unsafe_allow_html=True
-)
-
-
-
+     
 
             st.markdown(
     f"<div style='display: flex; flex-wrap: wrap; gap: 6px;'>{html_blocks}</div>",
