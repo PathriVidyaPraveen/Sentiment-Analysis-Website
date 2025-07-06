@@ -97,14 +97,24 @@ if st.button("Analyze Sentiment"):
             attn_weights = attn_weights[0][:len(tokens)].numpy()
             st.markdown("#### Attention Heatmap:")
             st.markdown(
-                "<div style='display: flex; flex-wrap: wrap;'>"
-                + "".join([
-                    f"<div style='padding: 4px 8px; margin: 4px; border-radius: 8px; background-color: rgba(255,0,0,{weight:.2f}); color: white;'>{word}</div>"
-                    for word, weight in zip(tokens, attn_weights)
-                ]) +
-                "</div>",
-                unsafe_allow_html=True
-            )
+    "<div style='display: flex; flex-wrap: wrap;'>"
+    + "".join([
+        f"""
+        <div style='
+            padding: 4px 8px;
+            margin: 4px;
+            border-radius: 8px;
+            background-color: rgba(255, 0, 0, {weight:.2f});
+            color: {"black" if weight < 0.5 else "white"};
+            font-weight: bold;
+        '>{word}</div>
+        """
+        for word, weight in zip(tokens, attn_weights)
+    ]) +
+    "</div>",
+    unsafe_allow_html=True
+)
+
 
 # Clean footer and hide Streamlit watermark
 st.markdown("""
